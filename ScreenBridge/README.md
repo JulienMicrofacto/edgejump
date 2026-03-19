@@ -56,10 +56,19 @@ cp -R build/ScreenBridge.app /Applications/
 Pour le lancement automatique au demarrage :
 **Reglages Systeme → General → Ouverture → ajouter ScreenBridge**
 
+## Configuration
+
+Le menu propose un slider pour ajuster le ratio de la zone de bridge (10% a 90%, defaut 50%).
+
+- **Ratio eleve** (ex: 70%) : la teleportation couvre la majorite de la hauteur de l'ecran
+- **Ratio faible** (ex: 30%) : seul le haut de l'ecran teleporte, le reste passe par le MacBook
+
+Le reglage est persiste via `UserDefaults` (cle `bridgeRatio`).
+
 ## Fonctionnement
 
 - Icone barre de menu : ↔ (`arrow.left.arrow.right`)
-- Menu : statut + Quit
+- Menu : statut, slider de ratio, Quit
 - Detection automatique des ecrans via `NSScreen.screens`
 - Surveillance du curseur via `CGEventTap`
 - Teleportation via `CGWarpMouseCursorPosition`
@@ -83,4 +92,3 @@ ScreenBridge/
 
 - Fonctionne uniquement avec le setup 3 ecrans decrit ci-dessus
 - Necessite que les deux grands ecrans soient les plus a gauche et plus a droite dans la disposition macOS
-- Pas de preferences ni de configuration

@@ -15,7 +15,8 @@ Pas de Xcode project, pas de SPM — juste `swiftc` via le Makefile.
 Un seul fichier de logique : `ScreenBridge/AppDelegate.swift`.
 
 - `setupEventTap()` : cree un `CGEventTap` pour intercepter les mouvements souris
-- `handleMouseEvent()` : detecte si le curseur est au bord interieur d'un des deux ecrans exterieurs, dans la moitie haute → teleporte vers l'autre ecran
+- `handleMouseEvent()` : detecte si le curseur est au bord interieur d'un des deux ecrans exterieurs, dans la zone de bridge (configurable via `bridgeRatio`) → teleporte vers l'autre ecran
+- `bridgeRatio` : ratio configurable (0.1-0.9, defaut 0.5), persiste dans `UserDefaults`
 - `cgRect(from:mainScreenHeight:)` : convertit les coordonnees NSScreen (origine bas-gauche) en coordonnees CG (origine haut-gauche)
 
 ## Coordonnees

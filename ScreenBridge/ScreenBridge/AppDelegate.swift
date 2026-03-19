@@ -1,12 +1,32 @@
 import Cocoa
 import ApplicationServices
 
+extension Double {
+    func clamped(to range: ClosedRange<Double>, default d: Double) -> Double {
+        self == 0 ? d : Swift.min(Swift.max(self, range.lowerBound), range.upperBound)
+    }
+}
+
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private var eventTap: CFMachPort?
     private var lastWarpTime: CFAbsoluteTime = 0
     private let warpCooldown: CFAbsoluteTime = 0.3
     private var logTimer: Timer?
+    private var ratioLabel: NSMenuItem!
+
+    private var bridgeRatio: Double {
+        get { UserDefaults.standard.double(forKey: "bridgeRatio").clamped(to: 0.1...0.9, default: 0.5) }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "bridgeRatio")
+            updateRatioLabel()
+        }
+    }
+
+    private func updateRatioLabel() {
+        ratioLabel?.title = "Bridge zone: top \(Int(bridgeRatio * 100))%"
+    }
+
     private let logFile: FileHandle? = {
         let path = "/tmp/screenbridge.log"
         FileManager.default.createFile(atPath: path, contents: nil)
@@ -61,12 +81,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             button.image = NSImage(systemSymbolName: "arrow.left.arrow.right", accessibilityDescription: "ScreenBridge")
         }
         let menu = NSMenu()
+
         let status = NSMenuItem(title: "ScreenBridge – Active", action: nil, keyEquivalent: "")
         status.isEnabled = false
         menu.addItem(status)
+
+        menu.addItem(.separator())
+
+        ratioLabel = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        ratioLabel.isEnabled = false
+        updateRatioLabel()
+        menu.addItem(ratioLabel)
+
+        let slider = NSSlider(value: bridgeRatio, minValue: 0.1, maxValue: 0.9, target: self, action: #selector(sliderChanged(_:)))
+        slider.frame = NSRect(x: 18, y: 0, width: 180, height: 24)
+        slider.isContinuous = true
+        let sliderView = NSView(frame: NSRect(x: 0, y: 0, width: 216, height: 28))
+        sliderView.addSubview(slider)
+        let sliderItem = NSMenuItem()
+        sliderItem.view = sliderView
+        menu.addItem(sliderItem)
+
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         statusItem.menu = menu
+    }
+
+    @objc private func sliderChanged(_ sender: NSSlider) {
+        bridgeRatio = sender.doubleValue
     }
 
     // MARK: - Event Tap
@@ -138,32 +180,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let edgeZone: CGFloat = 6
 
-        // Inner edge of left Dell (right side, x ≈ leftCG.maxX)
+        let ratio = CGFloat(bridgeRatio)
+
+        // Inner edge of left screen (right side)
         if pos.x >= leftCG.maxX - edgeZone && pos.x <= leftCG.maxX + edgeZone
             && pos.y >= leftCG.minY && pos.y <= leftCG.maxY {
-            let midY = (leftCG.minY + leftCG.maxY) / 2
-            let zone = pos.y < midY ? "TOP" : "BOTTOM"
-            log("EDGE-LEFT pos=(\(Int(pos.x)),\(Int(pos.y))) edge=\(Int(leftCG.maxX)) midY=\(Int(midY)) \(zone)")
-            if pos.y < midY {
-                let relativeY = (pos.y - leftCG.minY) / (leftCG.height / 2)
-                let newY = rightCG.minY + relativeY * (rightCG.height / 2)
-                log("WARP → right Dell (\(Int(rightCG.minX + 50)), \(Int(newY)))")
+            let splitY = leftCG.minY + leftCG.height * ratio
+            let zone = pos.y < splitY ? "BRIDGE" : "PASS"
+            log("EDGE-LEFT pos=(\(Int(pos.x)),\(Int(pos.y))) splitY=\(Int(splitY)) \(zone)")
+            if pos.y < splitY {
+                let relativeY = (pos.y - leftCG.minY) / (leftCG.height * ratio)
+                let newY = rightCG.minY + relativeY * (rightCG.height * ratio)
+                log("WARP → right (\(Int(rightCG.minX + 50)), \(Int(newY)))")
                 lastWarpTime = now
                 CGWarpMouseCursorPosition(CGPoint(x: rightCG.minX + 50, y: newY))
                 return
             }
         }
 
-        // Inner edge of right Dell (left side, x ≈ rightCG.minX)
+        // Inner edge of right screen (left side)
         if pos.x >= rightCG.minX - edgeZone && pos.x <= rightCG.minX + edgeZone
             && pos.y >= rightCG.minY && pos.y <= rightCG.maxY {
-            let midY = (rightCG.minY + rightCG.maxY) / 2
-            let zone = pos.y < midY ? "TOP" : "BOTTOM"
-            log("EDGE-RIGHT pos=(\(Int(pos.x)),\(Int(pos.y))) edge=\(Int(rightCG.minX)) midY=\(Int(midY)) \(zone)")
-            if pos.y < midY {
-                let relativeY = (pos.y - rightCG.minY) / (rightCG.height / 2)
-                let newY = leftCG.minY + relativeY * (leftCG.height / 2)
-                log("WARP → left Dell (\(Int(leftCG.maxX - 50)), \(Int(newY)))")
+            let splitY = rightCG.minY + rightCG.height * ratio
+            let zone = pos.y < splitY ? "BRIDGE" : "PASS"
+            log("EDGE-RIGHT pos=(\(Int(pos.x)),\(Int(pos.y))) splitY=\(Int(splitY)) \(zone)")
+            if pos.y < splitY {
+                let relativeY = (pos.y - rightCG.minY) / (rightCG.height * ratio)
+                let newY = leftCG.minY + relativeY * (leftCG.height * ratio)
+                log("WARP → left (\(Int(leftCG.maxX - 50)), \(Int(newY)))")
                 lastWarpTime = now
                 CGWarpMouseCursorPosition(CGPoint(x: leftCG.maxX - 50, y: newY))
                 return
