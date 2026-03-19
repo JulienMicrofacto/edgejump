@@ -1,6 +1,6 @@
 # ScreenBridge
 
-App menu bar macOS en Swift. Teleporte le curseur entre deux ecrans exterieurs quand il est dans la moitie haute du bord interieur.
+macOS menu bar app in Swift. Teleports cursor between two external monitors when in the top portion of the inner edge.
 
 ## Build
 
@@ -8,25 +8,25 @@ App menu bar macOS en Swift. Teleporte le curseur entre deux ecrans exterieurs q
 cd ScreenBridge && make
 ```
 
-Pas de Xcode project, pas de SPM — juste `swiftc` via le Makefile.
+No Xcode project, no SPM — just `swiftc` via the Makefile.
 
 ## Architecture
 
-Un seul fichier de logique : `ScreenBridge/AppDelegate.swift`.
+Single logic file: `ScreenBridge/AppDelegate.swift`.
 
-- `setupEventTap()` : cree un `CGEventTap` pour intercepter les mouvements souris
-- `handleMouseEvent()` : detecte si le curseur est au bord interieur d'un des deux ecrans exterieurs, dans la zone de bridge (configurable via `bridgeRatio`) → teleporte vers l'autre ecran
-- `bridgeRatio` : ratio configurable (0.1-0.9, defaut 0.5), persiste dans `UserDefaults`
-- `cgRect(from:mainScreenHeight:)` : convertit les coordonnees NSScreen (origine bas-gauche) en coordonnees CG (origine haut-gauche)
+- `setupEventTap()`: creates a `CGEventTap` to intercept mouse movements
+- `handleMouseEvent()`: detects if cursor is at the inner edge of one of the two external screens, within the bridge zone (configurable via `bridgeRatio`) → teleports to the other screen
+- `bridgeRatio`: configurable ratio (0.1-0.9, default 0.5), persisted in `UserDefaults`
+- `cgRect(from:mainScreenHeight:)`: converts NSScreen coordinates (origin bottom-left) to CG coordinates (origin top-left)
 
-## Coordonnees
+## Coordinates
 
-Attention : NSScreen utilise un systeme avec Y=0 en bas, CG utilise Y=0 en haut. La conversion se fait via `mainScreenHeight - y - height`.
+NSScreen uses Y=0 at bottom, CG uses Y=0 at top. Conversion: `mainScreenHeight - y - height`.
 
 ## Logs
 
-Les logs vont dans `/tmp/screenbridge.log`. Position du curseur loggee toutes les 0.5s + events de teleportation.
+Logs go to `/tmp/screenbridge.log`. Cursor position logged every 0.5s + teleportation events.
 
-## Tests
+## Testing
 
-Pas de tests automatises. Pour tester manuellement : bouger la souris vers le bord interieur des deux grands ecrans et verifier la teleportation dans la moitie haute. Verifier que la moitie basse ne teleporte pas.
+No automated tests. To test manually: move cursor to inner edge of both large screens and verify teleportation in the top zone. Verify the bottom zone does not teleport.

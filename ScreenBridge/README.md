@@ -1,31 +1,31 @@
 # ScreenBridge
 
-App macOS de barre de menu qui teleporte le curseur entre les bords interieurs de deux ecrans exterieurs, en ne bridgeant que la moitie haute de l'ecran (la moitie basse laisse macOS gerer la transition vers un ecran central).
+A macOS menu bar app that teleports the cursor between the inner edges of two external monitors, bridging only the top portion of the screen (the bottom portion lets macOS handle the transition to a central screen).
 
-## Cas d'usage
+## Use case
 
-Setup avec 3 ecrans : 2 grands moniteurs (gauche/droite) + MacBook au centre en dessous.
+3-screen setup: 2 large monitors (left/right) + MacBook centered below.
 
 ```
 ┌──────────┐┌──────────┐
-│  Gauche  ││  Droite  │
+│   Left   ││  Right   │
 │          ││          │
 └────┬─────┘└─────┬────┘
      │ ┌────────┐ │
-     └─│ MacBook│─┘
+     └─│MacBook │─┘
        └────────┘
 ```
 
-Dans les Reglages macOS, les deux grands ecrans sont colles bord a bord. Le MacBook est place en dessous, entre les deux. Le probleme : la moitie haute des ecrans n'a physiquement rien entre eux, mais macOS ne permet pas de definir deux destinations differentes selon la hauteur du curseur.
+In macOS Display Settings, the two large monitors are placed side by side. The MacBook is placed below, between them. The problem: the top half of the monitors has nothing physically between them, but macOS can't route the cursor to two different destinations depending on the vertical position.
 
-ScreenBridge resout ca :
-- **Moitie haute** : le curseur atteint le bord interieur → teleportation directe vers l'autre grand ecran
-- **Moitie basse** : macOS gere normalement (transition vers le MacBook)
+ScreenBridge solves this:
+- **Top zone**: cursor hits the inner edge → teleports directly to the other large monitor
+- **Bottom zone**: macOS handles it normally (transition to the MacBook)
 
-## Prerequis
+## Requirements
 
 - macOS 13+
-- Autorisation Accessibilite (demandee au premier lancement)
+- Accessibility permission (prompted on first launch)
 
 ## Build
 
@@ -34,61 +34,66 @@ cd ScreenBridge
 make
 ```
 
-Produit `build/ScreenBridge.app`.
+Produces `build/ScreenBridge.app`.
 
-## Lancement
+## Run
 
 ```bash
 make run
-# ou
+# or
 open build/ScreenBridge.app
 ```
 
-Au premier lancement, accorder l'acces Accessibilite dans :
-**Reglages Systeme → Confidentialite et securite → Accessibilite**
+On first launch, grant Accessibility access in:
+**System Settings → Privacy & Security → Accessibility**
 
-## Installation
+## Install
 
 ```bash
 cp -R build/ScreenBridge.app /Applications/
 ```
 
-Pour le lancement automatique au demarrage :
-**Reglages Systeme → General → Ouverture → ajouter ScreenBridge**
+To launch at login:
+**System Settings → General → Login Items → add ScreenBridge**
 
 ## Configuration
 
-Le menu propose un slider pour ajuster le ratio de la zone de bridge (10% a 90%, defaut 50%).
+The menu bar dropdown includes a slider to adjust the bridge zone ratio (10% to 90%, default 50%).
 
-- **Ratio eleve** (ex: 70%) : la teleportation couvre la majorite de la hauteur de l'ecran
-- **Ratio faible** (ex: 30%) : seul le haut de l'ecran teleporte, le reste passe par le MacBook
+- **High ratio** (e.g. 70%): teleportation covers most of the screen height
+- **Low ratio** (e.g. 30%): only the very top teleports, the rest goes through the MacBook
 
-Le reglage est persiste via `UserDefaults` (cle `bridgeRatio`).
+The setting is persisted via `UserDefaults`.
 
-## Fonctionnement
+## How it works
 
-- Icone barre de menu : ↔ (`arrow.left.arrow.right`)
-- Menu : statut, slider de ratio, Quit
-- Detection automatique des ecrans via `NSScreen.screens`
-- Surveillance du curseur via `CGEventTap`
+- Menu bar icon: ↔ (`arrow.left.arrow.right`)
+- Menu: status, ratio slider, Quit
+- Automatic screen detection via `NSScreen.screens`
+- Cursor monitoring via `CGEventTap`
 - Teleportation via `CGWarpMouseCursorPosition`
-- Cooldown de 0.3s pour eviter les boucles
-- Zone de detection de 6px autour du bord
-- Logs dans `/tmp/screenbridge.log`
+- 0.3s cooldown to prevent loops
+- 6px edge detection zone
+- Logs in `/tmp/screenbridge.log`
 
-## Structure
+## Project structure
 
 ```
 ScreenBridge/
 ├── Makefile
+├── LICENSE
 ├── .gitignore
 └── ScreenBridge/
-    ├── main.swift          # Point d'entree
-    ├── AppDelegate.swift   # Logique principale
-    └── Info.plist          # LSUIElement=true (pas d'icone Dock)
+    ├── main.swift          # Entry point
+    ├── AppDelegate.swift   # Main logic
+    └── Info.plist          # LSUIElement=true (no Dock icon)
 ```
 
 ## Limitations
 
-- Fonctionne uniquement avec le setup 3 ecrans decrit ci-dessus
-- Necessite que les deux grands ecrans soient les plus a gauche et plus a droite dans la disposition macOS
+- Designed for the 3-screen setup described above
+- Requires the two large monitors to be the leftmost and rightmost in macOS display arrangement
+
+## License
+
+MIT
