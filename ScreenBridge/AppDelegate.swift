@@ -178,7 +178,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let now = CFAbsoluteTimeGetCurrent()
         guard now - lastWarpTime > warpCooldown else { return }
 
-        let edgeZone: CGFloat = 6
+        let edgeZone: CGFloat = 1
 
         let ratio = CGFloat(bridgeRatio)
 
