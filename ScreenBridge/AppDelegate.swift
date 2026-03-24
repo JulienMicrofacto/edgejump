@@ -178,7 +178,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let now = CFAbsoluteTimeGetCurrent()
         guard now - lastWarpTime > warpCooldown else { return }
 
-        let edgeZone: CGFloat = 6
+        let edgeZone: CGFloat = 1
 
         let ratio = CGFloat(bridgeRatio)
 
@@ -191,9 +191,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if pos.y < splitY {
                 let relativeY = (pos.y - leftCG.minY) / (leftCG.height * ratio)
                 let newY = rightCG.minY + relativeY * (rightCG.height * ratio)
-                log("WARP → right (\(Int(rightCG.minX + 50)), \(Int(newY)))")
+                let destX = rightCG.minX + 2
+                log("WARP → right (\(Int(destX)), \(Int(newY)))")
                 lastWarpTime = now
-                CGWarpMouseCursorPosition(CGPoint(x: rightCG.minX + 50, y: newY))
+                CGDisplayMoveCursorToPoint(CGMainDisplayID(), CGPoint(x: destX, y: newY))
                 return
             }
         }
@@ -207,9 +208,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if pos.y < splitY {
                 let relativeY = (pos.y - rightCG.minY) / (rightCG.height * ratio)
                 let newY = leftCG.minY + relativeY * (leftCG.height * ratio)
-                log("WARP → left (\(Int(leftCG.maxX - 50)), \(Int(newY)))")
+                let destX = leftCG.maxX - 2
+                log("WARP → left (\(Int(destX)), \(Int(newY)))")
                 lastWarpTime = now
-                CGWarpMouseCursorPosition(CGPoint(x: leftCG.maxX - 50, y: newY))
+                CGDisplayMoveCursorToPoint(CGMainDisplayID(), CGPoint(x: destX, y: newY))
                 return
             }
         }
